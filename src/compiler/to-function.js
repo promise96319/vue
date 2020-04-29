@@ -18,7 +18,14 @@ function createFunction (code, errors) {
   }
 }
 
+/**
+ * 1、缓存编译结果，通过 createCompileToFunctionFn 函数内声明的 cache 常量实现。
+ * 2、调用 compile 函数将模板字符串转成渲染函数字符串
+ * 3、调用 createFunction 函数将渲染函数字符串转成真正的渲染函数
+ * 4、打印编译错误，包括：模板字符串 -> 渲染函数字符串 以及 渲染函数字符串 -> 渲染函数 这两个阶段的错误
+ */
 export function createCompileToFunctionFn (compile: Function): Function {
+  // 缓存编译后的结果, key 为 ? + template
   const cache = Object.create(null)
 
   return function compileToFunctions (
@@ -26,11 +33,13 @@ export function createCompileToFunctionFn (compile: Function): Function {
     options?: CompilerOptions,
     vm?: Component
   ): CompiledFunctionResult {
+
     options = extend({}, options)
     const warn = options.warn || baseWarn
     delete options.warn
 
     /* istanbul ignore if */
+    // 检验 new Function 是否可用，后面用到 createFunction
     if (process.env.NODE_ENV !== 'production') {
       // detect possible CSP restriction
       try {
@@ -56,7 +65,7 @@ export function createCompileToFunctionFn (compile: Function): Function {
       return cache[key]
     }
 
-    // compile
+    // compile 编译模板
     const compiled = compile(template, options)
 
     // check compilation errors/tips
@@ -90,6 +99,7 @@ export function createCompileToFunctionFn (compile: Function): Function {
     // turn code into functions
     const res = {}
     const fnGenErrors = []
+    // compiled.render 为函数体字符串
     res.render = createFunction(compiled.render, fnGenErrors)
     res.staticRenderFns = compiled.staticRenderFns.map(code => {
       return createFunction(code, fnGenErrors)

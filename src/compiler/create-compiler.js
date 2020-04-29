@@ -5,7 +5,13 @@ import { detectErrors } from './error-detector'
 import { createCompileToFunctionFn } from './to-function'
 
 export function createCompilerCreator (baseCompile: Function): Function {
+  // baseOptions - options文件内的选项
   return function createCompiler (baseOptions: CompilerOptions) {
+    /**
+     * 参数 模板字符串 + 编译选项(render的选项)
+     * 合并option和baseOption + 编译 + 错误处理
+     * 返回 编译后的字符串
+     */
     function compile (
       template: string,
       options?: CompilerOptions
@@ -67,6 +73,7 @@ export function createCompilerCreator (baseCompile: Function): Function {
       return compiled
     }
 
+    // 返回 render / staticRender
     return {
       compile,
       compileToFunctions: createCompileToFunctionFn(compile)
