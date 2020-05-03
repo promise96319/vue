@@ -12,6 +12,7 @@ import { extend, mergeOptions, formatComponentName } from '../util/index'
 
 let uid = 0
 
+// 添加 init 方法
 export function initMixin (Vue: Class<Component>) {
   Vue.prototype._init = function (options?: Object) {
     const vm: Component = this
@@ -35,14 +36,19 @@ export function initMixin (Vue: Class<Component>) {
       // internal component options needs special treatment.
       initInternalComponent(vm, options)
     } else {
+      // 重要！！！ - 合并 options
       vm.$options = mergeOptions(
+        // 构造函数以及继承的 option
         resolveConstructorOptions(vm.constructor),
+        // 实例化时传入的option
         options || {},
+        // 实例
         vm
       )
     }
     /* istanbul ignore else */
     if (process.env.NODE_ENV !== 'production') {
+      // 在获取 vm 属性方法时，检查属性是否存在等
       initProxy(vm)
     } else {
       vm._renderProxy = vm
@@ -90,10 +96,14 @@ export function initInternalComponent (vm: Component, options: InternalComponent
   }
 }
 
+// 获取当前实例的构造者的 options 属性，如果有super，递归获取
 export function resolveConstructorOptions (Ctor: Class<Component>) {
   let options = Ctor.options
+  // 如果是继承的组件
   if (Ctor.super) {
+    // 获取父组件 option
     const superOptions = resolveConstructorOptions(Ctor.super)
+    // 给构造函数添加 superOptions
     const cachedSuperOptions = Ctor.superOptions
     if (superOptions !== cachedSuperOptions) {
       // super option changed,

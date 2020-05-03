@@ -45,6 +45,9 @@ export function proxy (target: Object, sourceKey: string, key: string) {
   Object.defineProperty(target, key, sharedPropertyDefinition)
 }
 
+/**
+ * 初始化 props data methods computed watch
+ */
 export function initState (vm: Component) {
   vm._watchers = []
   const opts = vm.$options
@@ -316,6 +319,11 @@ function createWatcher (
   return vm.$watch(expOrFn, handler, options)
 }
 
+/**
+ * $data -> _data
+ * $props -> _props
+ * 
+ */
 export function stateMixin (Vue: Class<Component>) {
   // flow somehow has problems with directly declared definition object
   // when using Object.defineProperty, so we have to procedurally build up
@@ -339,6 +347,7 @@ export function stateMixin (Vue: Class<Component>) {
   Object.defineProperty(Vue.prototype, '$data', dataDef)
   Object.defineProperty(Vue.prototype, '$props', propsDef)
 
+  // 待续...
   Vue.prototype.$set = set
   Vue.prototype.$delete = del
 

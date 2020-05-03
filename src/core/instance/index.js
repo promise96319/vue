@@ -11,9 +11,11 @@ function Vue (options) {
   ) {
     warn('Vue is a constructor and should be called with the `new` keyword')
   }
+  // initMixin 中
   this._init(options)
 }
 
+// 在Vue上挂载属性和方法
 initMixin(Vue)
 stateMixin(Vue)
 eventsMixin(Vue)

@@ -33,6 +33,8 @@ const strats = config.optionMergeStrategies
  */
 if (process.env.NODE_ENV !== 'production') {
   strats.el = strats.propsData = function (parent, child, vm, key) {
+
+    // 当没有传 vm【实例】时，进行提示（Vue.extend 里面没有传，返回子类构造器）
     if (!vm) {
       warn(
         `option "${key}" can only be used during instance ` +
@@ -82,6 +84,7 @@ export function mergeDataOrFn (
   vm?: Component
 ): ?Function {
   if (!vm) {
+    // 合并的是 function
     // in a Vue.extend merge, both should be functions
     if (!childVal) {
       return parentVal
@@ -123,7 +126,9 @@ strats.data = function (
   childVal: any,
   vm?: Component
 ): ?Function {
+  // 没传 vm, 被Vue.extend(子类构造器)调用
   if (!vm) {
+    // 子类的 data 必须为 function
     if (childVal && typeof childVal !== 'function') {
       process.env.NODE_ENV !== 'production' && warn(
         'The "data" option should be a function ' +
@@ -382,22 +387,27 @@ function assertObjectType (name: string, value: any, vm: ?Component) {
 }
 
 /**
+ * ================ 合并 options ================ 
  * Merge two option objects into a new one.
  * Core utility used in both instantiation and inheritance.
  */
 export function mergeOptions (
-  parent: Object,
-  child: Object,
-  vm?: Component
+  parent: Object,  // 构造器上的 options
+  child: Object,   // 实例化时传入的 options
+  vm?: Component   // 实例
 ): Object {
+
+  // 校验 optios 内 components 的名称是否合法
   if (process.env.NODE_ENV !== 'production') {
     checkComponents(child)
   }
 
+  // 待定： 传入的是函数 ？ Vue?
   if (typeof child === 'function') {
     child = child.options
   }
 
+  // 规范化 props inject directives
   normalizeProps(child, vm)
   normalizeInject(child, vm)
   normalizeDirectives(child)
@@ -406,10 +416,13 @@ export function mergeOptions (
   // but only if it is a raw options object that isn't
   // the result of another mergeOptions call.
   // Only merged options has the _base property.
+
+  // _base 是定义在 Vue.options上的，所以只有合并后的 child _base 属性才会为 true
+  // 没有合并的 child 没有 _base
   if (!child._base) {
     if (child.extends) {
       parent = mergeOptions(parent, child.extends, vm)
-    }
+    } 
     if (child.mixins) {
       for (let i = 0, l = child.mixins.length; i < l; i++) {
         parent = mergeOptions(parent, child.mixins[i], vm)
@@ -423,10 +436,12 @@ export function mergeOptions (
     mergeField(key)
   }
   for (key in child) {
+    // parent 有则已经合并过了，不需要再次合并
     if (!hasOwn(parent, key)) {
       mergeField(key)
     }
   }
+  // 合并策略
   function mergeField (key) {
     const strat = strats[key] || defaultStrat
     options[key] = strat(parent[key], child[key], vm, key)

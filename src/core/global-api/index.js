@@ -18,6 +18,17 @@ import {
   defineReactive
 } from '../util/index'
 
+/**
+ * Vue上挂载全局方法（【静态！！！】方法和属性）
+ * 1. config
+ * 2. util 包括 warn extend, mergeOptions, defineReactive
+ * 3. set, delete
+ * 4. nextTick
+ * 5. options
+ * 6. ASSET_TYPES
+ * 7. use minxin extend 方法
+ * ...
+ */
 export function initGlobalAPI (Vue: GlobalAPI) {
   // config
   const configDef = {}
@@ -60,6 +71,7 @@ export function initGlobalAPI (Vue: GlobalAPI) {
   // components with in Weex's multi-instance scenarios.
   Vue.options._base = Vue
 
+  // 添加内置组件 - keepAlive
   extend(Vue.options.components, builtInComponents)
 
   initUse(Vue)

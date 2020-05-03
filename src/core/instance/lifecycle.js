@@ -19,6 +19,8 @@ import {
 } from '../util/index'
 
 export let activeInstance: any = null
+
+// 判断是否在更新子组件，是则 不用提示 $attrs $listeners 为只读属性，否则提示
 export let isUpdatingChildComponent: boolean = false
 
 export function setActiveInstance(vm: Component) {
@@ -34,6 +36,7 @@ export function initLifecycle (vm: Component) {
 
   // locate first non-abstract parent
   let parent = options.parent
+  // 找到非抽象的父组件（非 keep-alive 这类组件）
   if (parent && !options.abstract) {
     while (parent.$options.abstract && parent.$parent) {
       parent = parent.$parent
@@ -55,6 +58,12 @@ export function initLifecycle (vm: Component) {
   vm._isBeingDestroyed = false
 }
 
+/**
+ * Vue 生命周期
+ * _update 方法
+ * $forceUpdate 方法
+ * $destroy 方法
+ */
 export function lifecycleMixin (Vue: Class<Component>) {
   Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
     const vm: Component = this
@@ -219,6 +228,7 @@ export function updateChildComponent (
   parentVnode: MountedComponentVNode,
   renderChildren: ?Array<VNode>
 ) {
+  // 此时需要更新 $attrs $listeners，不需要提示它们为只读属性
   if (process.env.NODE_ENV !== 'production') {
     isUpdatingChildComponent = true
   }

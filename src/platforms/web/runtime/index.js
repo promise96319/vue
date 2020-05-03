@@ -19,6 +19,7 @@ import { patch } from './patch'
 import platformDirectives from './directives/index'
 import platformComponents from './components/index'
 
+// 平台相关方法
 // install platform specific utils
 Vue.config.mustUseProp = mustUseProp
 Vue.config.isReservedTag = isReservedTag
@@ -27,7 +28,9 @@ Vue.config.getTagNamespace = getTagNamespace
 Vue.config.isUnknownElement = isUnknownElement
 
 // install platform runtime directives & components
+// 平台指令 v-model v-show
 extend(Vue.options.directives, platformDirectives)
+// 平台组件 Transition TransitionGroup
 extend(Vue.options.components, platformComponents)
 
 // install platform patch function
