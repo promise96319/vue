@@ -56,11 +56,11 @@ export default class Watcher {
     vm._watchers.push(this)
     // options
     if (options) {
-      this.deep = !!options.deep
-      this.user = !!options.user
-      this.lazy = !!options.lazy
-      this.sync = !!options.sync
-      this.before = options.before
+      this.deep = !!options.deep  // 当前观察者实例对象是否是深度观测
+      this.user = !!options.user  // 当前观察者实例对象是 开发者定义的 还是 内部定义的
+      this.lazy = !!options.lazy  // 当前观察者实例对象是否是计算属性的观察者
+      this.sync = !!options.sync  // 观察者当数据变化时是否同步求值并执行回调
+      this.before = options.before// Watcher 实例的钩子，当数据变化之后，触发更新之前，调用在创建渲染函数的观察者实例对象时传递的 before 选项
     } else {
       this.deep = this.user = this.lazy = this.sync = false
     }
@@ -68,6 +68,7 @@ export default class Watcher {
     this.id = ++uid // uid for batching
     this.active = true
     this.dirty = this.lazy // for lazy watchers
+
     this.deps = []
     this.newDeps = []
     this.depIds = new Set()
@@ -79,6 +80,7 @@ export default class Watcher {
     if (typeof expOrFn === 'function') {
       this.getter = expOrFn
     } else {
+      // obj.a.b()
       this.getter = parsePath(expOrFn)
       if (!this.getter) {
         this.getter = noop
@@ -127,9 +129,16 @@ export default class Watcher {
    */
   addDep (dep: Dep) {
     const id = dep.id
+    // 避免收集重复依赖
     if (!this.newDepIds.has(id)) {
       this.newDepIds.add(id)
       this.newDeps.push(dep)
+      // 多次求值中避免收集重复依赖
+      // 原因在于每一次求值之后 newDepIds 属性都会被清空，
+      // 也就是说每次重新求值的时候对于观察者实例对象来讲 newDepIds 属性始终是全新的
+      // 虽然每次求值之后会清空 newDepIds 属性的值，
+      // 但在清空之前会把 newDepIds 属性的值以及 newDeps 属性的值赋值给 depIds 属性和 deps 属性，
+      // 这样重新求值的时候 depIds 属性和 deps 属性将会保存着上一次求值中 newDepIds 属性以及 newDeps 属性的值
       if (!this.depIds.has(id)) {
         dep.addSub(this)
       }
@@ -141,6 +150,7 @@ export default class Watcher {
    */
   cleanupDeps () {
     let i = this.deps.length
+    // 移除废弃观察者
     while (i--) {
       const dep = this.deps[i]
       if (!this.newDepIds.has(dep.id)) {
@@ -168,6 +178,7 @@ export default class Watcher {
     } else if (this.sync) {
       this.run()
     } else {
+      // 对于渲染函数的观察者来讲，它并不是同步更新变化的，而是将变化放到一个异步更新队列中
       queueWatcher(this)
     }
   }
@@ -224,6 +235,7 @@ export default class Watcher {
 
   /**
    * Remove self from all dependencies' subscriber list.
+   * 解除观察者对属性的观察
    */
   teardown () {
     if (this.active) {

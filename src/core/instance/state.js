@@ -112,8 +112,19 @@ function initProps (vm: Component, propsOptions: Object) {
   toggleObserving(true)
 }
 
+/**
+ * 初始化 data
+ * 根据 vm.$options.data 选项获取真正想要的数据（注意：此时 vm.$options.data 是函数）
+ * 校验得到的数据是否是一个纯对象
+ * 检查数据对象 data 上的键是否与 props 对象上的键冲突
+ * 检查 methods 对象上的键是否与 data 对象上的键冲突
+ * 在 Vue 实例对象上添加代理访问数据对象的同名属性
+ * 最后调用 observe 函数开启响应式之路
+ */
 function initData (vm: Component) {
   let data = vm.$options.data
+
+  // 合并时 data 已经处理为 function了，检测是否是functon
   data = vm._data = typeof data === 'function'
     ? getData(data, vm)
     : data || {}
@@ -125,6 +136,8 @@ function initData (vm: Component) {
       vm
     )
   }
+
+  // 判断 props, data, methods 是否重名
   // proxy data on instance
   const keys = Object.keys(data)
   const props = vm.$options.props
@@ -147,6 +160,8 @@ function initData (vm: Component) {
         vm
       )
     } else if (!isReserved(key)) {
+      // 给 data 的 key 加一层代理 :
+      // 访问 this.key => 访问 this._data.key
       proxy(vm, `_data`, key)
     }
   }
@@ -322,7 +337,7 @@ function createWatcher (
 /**
  * $data -> _data
  * $props -> _props
- * 
+ * $set/$delete/$watch
  */
 export function stateMixin (Vue: Class<Component>) {
   // flow somehow has problems with directly declared definition object

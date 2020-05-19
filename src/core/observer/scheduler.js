@@ -160,16 +160,33 @@ function callActivatedHooks (queue) {
  * Push a watcher into the watcher queue.
  * Jobs with duplicate IDs will be skipped unless it's
  * pushed when the queue is being flushed.
+ * 当我们修改 name 属性值时，
+ * 由于 name 属性收集了渲染函数的观察者(后面我们称其为 renderWatcher)作为依赖，
+ * 所以此时 renderWatcher 会被添加到队列中，
+ * 接着我们修改了 age 属性的值，
+ * 由于 age 属性也收集了 renderWatcher 作为依赖，
+ * 所以此时也会尝试将 renderWatcher 添加到队列中，
+ * 但是由于 renderWatcher 已经存在于队列中了，
+ * 所以并不会重复添加，这样队列中将只会存在一个 renderWatcher
  */
 export function queueWatcher (watcher: Watcher) {
   const id = watcher.id
   if (has[id] == null) {
     has[id] = true
+    // flushing 变量是一个标志，
+    // 我们知道放入队列 queue 中的所有观察者将会在突变完成之后统一执行更新，
+    // 当更新开始时会将 flushing 变量的值设置为 true，
+    // 代表着此时正在执行更新
     if (!flushing) {
       queue.push(watcher)
     } else {
       // if already flushing, splice the watcher based on its id
       // if already past its id, it will be run next immediately.
+      // 计算属性，比如队列执行更新时经常会执行渲染函数观察者的更新，
+      // 渲染函数中很可能有计算属性的存在，
+      // 由于计算属性在实现方式上与普通响应式属性有所不同，
+      // 所以当触发计算属性的 get 拦截器函数时会有观察者入队的行为，
+      // 这个时候我们需要特殊处理
       let i = queue.length - 1
       while (i > index && queue[i].id > watcher.id) {
         i--
@@ -184,6 +201,8 @@ export function queueWatcher (watcher: Watcher) {
         flushSchedulerQueue()
         return
       }
+      // 最好理解的方式就是把 nextTick 看做 setTimeout(fn, 0)
+      // setTimeout 并不是最优的选择，nextTick 的意义就是它会选择一条最优的解决方案
       nextTick(flushSchedulerQueue)
     }
   }

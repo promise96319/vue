@@ -141,6 +141,7 @@ export function createPatchFunction (backend) {
     }
 
     vnode.isRootInsert = !nested // for transition enter check
+    // 递归创建子组件真实节点,直到完成所有子组件的渲染才进行根节点的真实节点插入
     if (createComponent(vnode, insertedVnodeQueue, parentElm, refElm)) {
       return
     }
@@ -281,6 +282,7 @@ export function createPatchFunction (backend) {
     }
   }
 
+  // 遍历子节点，递归调用创建真实dom节点的方法 - createElm
   function createChildren (vnode, children, insertedVnodeQueue) {
     if (Array.isArray(children)) {
       if (process.env.NODE_ENV !== 'production') {

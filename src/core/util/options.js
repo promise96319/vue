@@ -121,6 +121,7 @@ export function mergeDataOrFn (
   }
 }
 
+// data 合并成 function ()
 strats.data = function (
   parentVal: any,
   childVal: any,
@@ -147,6 +148,7 @@ strats.data = function (
 
 /**
  * Hooks and props are merged as arrays.
+ * Hooks 和 props 合并成数组
  */
 function mergeHook (
   parentVal: ?Array<Function>,
@@ -184,6 +186,8 @@ LIFECYCLE_HOOKS.forEach(hook => {
  * When a vm is present (instance creation), we need to do
  * a three-way merge between constructor options, instance
  * options and parent options.
+ * 
+ * component / directives / filters 合并
  */
 function mergeAssets (
   parentVal: ?Object,
@@ -274,6 +278,7 @@ const defaultStrat = function (parentVal: any, childVal: any): any {
 
 /**
  * Validate component names
+ * 检查 组件 名称 是否合法
  */
 function checkComponents (options: Object) {
   for (const key in options.components) {

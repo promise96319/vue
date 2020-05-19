@@ -35,23 +35,32 @@ export function toggleObserving (value: boolean) {
  * collect dependencies and dispatch updates.
  */
 export class Observer {
-  value: any;
+  value: any; 
   dep: Dep;
   vmCount: number; // number of vms that have this object as root $data
 
   constructor (value: any) {
+    // value 只有两种取值：数组 or 对象
     this.value = value
     this.dep = new Dep()
     this.vmCount = 0
     def(value, '__ob__', this)
+    // 注解：arrayMethods 是数组变异方法数组，里面的方法都对原始方法做了一层代理。
+    // 如果是数组，一些方法改变数据时，不具有响应式。
+    // arrayMethods 继承于 array, 另外又添加了一些处理。
+    // 如果有__proto__ 则 使用继承
+    // 否则 将方法copy到当前数组上。
     if (Array.isArray(value)) {
+      // 对变异方法处理
       if (hasProto) {
         protoAugment(value, arrayMethods)
       } else {
         copyAugment(value, arrayMethods, arrayKeys)
       }
+      // 对每一个元素响应式处理
       this.observeArray(value)
     } else {
+      // 如果是对象，对key进行响应式处理
       this.walk(value)
     }
   }
@@ -106,6 +115,8 @@ function copyAugment (target: Object, src: Object, keys: Array<string>) {
  * Attempt to create an observer instance for a value,
  * returns the new observer if successfully observed,
  * or the existing observer if the value already has one.
+ * 
+ * 如果是 数组 或者 对象，则new Observer() 进行监听。
  */
 export function observe (value: any, asRootData: ?boolean): Observer | void {
   if (!isObject(value) || value instanceof VNode) {
@@ -131,6 +142,7 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
 
 /**
  * Define a reactive property on an Object.
+ * 对象 响应式处理
  */
 export function defineReactive (
   obj: Object,
@@ -139,6 +151,7 @@ export function defineReactive (
   customSetter?: ?Function,
   shallow?: boolean
 ) {
+  // 每一个数据字段都通过闭包引用着属于自己的 dep 常量
   const dep = new Dep()
 
   const property = Object.getOwnPropertyDescriptor(obj, key)
@@ -149,6 +162,22 @@ export function defineReactive (
   // cater for pre-defined getter/setters
   const getter = property && property.get
   const setter = property && property.set
+  // 当属性原本存在 get 拦截器函数时，在初始化的时候不要触发 get 函数，
+  // 只有当真正的获取该属性的值的时候，再通过调用缓存下来的属性原本的 getter 函数取值即可
+  // 如果数据对象的某个属性原本就拥有自己的 get 函数，那么这个属性就不会被深度观测
+  // 
+  // !getter 原因：
+  // 第一：由于当属性存在原本的 getter 时在深度观测之前不会取值，
+  // 所以在深度观测语句执行之前取不到属性值从而无法深度观测v
+  // 第二：之所以在深度观测之前不取值是因为属性原本的 getter 由用户定义，
+  // 用户可能在 getter 中做任何意想不到的事情
+  //
+  // 如果有 setter
+  // 经过 defineReactive 函数的处理之后，该属性将被重新定义 getter 和 setter
+  // 此时该属性变成了既拥有 get 函数又拥有 set 函数。
+  // 如果一个被观测的对象重新赋值，新的值又被观测了。
+  // 
+  // arguments.length === 2 说明 没有传 val
   if ((!getter || setter) && arguments.length === 2) {
     val = obj[key]
   }
@@ -160,10 +189,17 @@ export function defineReactive (
     get: function reactiveGetter () {
       const value = getter ? getter.call(obj) : val
       if (Dep.target) {
+        // 第一个框：dep 为闭包引用
+        // 收集的依赖的触发时机是当属性值被修改时触发，即在 set 函数中触发：dep.notify()
         dep.depend()
         if (childOb) {
+          // 第二个框：childOb.dep
+          // childOb.dep = xxx.__ob__.dep
+          // 收集的依赖的触发时机是在使用 $set 或 Vue.set 给数据对象添加新属性时触发
+          // 主要作用是为了添加、删除属性时有能力触发依赖，而这就是 Vue.set 或 Vue.delete 的原理。
           childOb.dep.depend()
           if (Array.isArray(value)) {
+            // 数组的索引是非响应式的，
             dependArray(value)
           }
         }
@@ -173,6 +209,7 @@ export function defineReactive (
     set: function reactiveSetter (newVal) {
       const value = getter ? getter.call(obj) : val
       /* eslint-disable no-self-compare */
+      // 相等 或者 NaN
       if (newVal === value || (newVal !== newVal && value !== value)) {
         return
       }
@@ -264,6 +301,7 @@ export function del (target: Array<any> | Object, key: any) {
 /**
  * Collect dependencies on array elements when the array is touched, since
  * we cannot intercept array element access like property getters.
+ * 数组的索引是非响应式的
  */
 function dependArray (value: Array<any>) {
   for (let e, i = 0, l = value.length; i < l; i++) {

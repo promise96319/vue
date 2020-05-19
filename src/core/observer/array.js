@@ -27,6 +27,7 @@ methodsToPatch.forEach(function (method) {
   def(arrayMethods, method, function mutator (...args) {
     const result = original.apply(this, args)
     const ob = this.__ob__
+    // 如果将新增了数据，需要对新增数据进行观察
     let inserted
     switch (method) {
       case 'push':

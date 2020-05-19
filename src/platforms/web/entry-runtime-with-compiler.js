@@ -86,7 +86,7 @@ Vue.prototype.$mount = function (
         shouldDecodeNewlines,
         // 目的是对浏览器的怪癖做兼容
         shouldDecodeNewlinesForHref,
-        // 改变纯文本插入分隔符。
+        // 改变纯文本插入分隔符。{{}}
         delimiters: options.delimiters,
         // 当设为 true 时，将会保留且渲染模板中的 HTML 注释。默认行为是舍弃它们。
         comments: options.comments

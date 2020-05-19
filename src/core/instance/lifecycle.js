@@ -20,7 +20,11 @@ import {
 
 export let activeInstance: any = null
 
-// 判断是否在更新子组件，是则 不用提示 $attrs $listeners 为只读属性，否则提示
+/**
+ * 判断是否在更新子组件，
+ * 是则 不用提示 $attrs $listeners 为只读属性，
+ * 否则提示
+ * */ 
 export let isUpdatingChildComponent: boolean = false
 
 export function setActiveInstance(vm: Component) {
@@ -43,8 +47,9 @@ export function initLifecycle (vm: Component) {
     }
     parent.$children.push(vm)
   }
-
+  // 设置当前实例的 $parent 属性，指向父级
   vm.$parent = parent
+  // 设置 $root 属性，有父级就是用父级的 $root，否则 $root 指向自身
   vm.$root = parent ? parent.$root : vm
 
   vm.$children = []

@@ -112,6 +112,7 @@ export function createComponent (
   const baseCtor = context.$options._base
 
   // plain options object: turn it into a constructor
+  // 针对局部组件注册场景
   if (isObject(Ctor)) {
     Ctor = baseCtor.extend(Ctor)
   }
@@ -148,6 +149,7 @@ export function createComponent (
 
   // resolve constructor options in case global mixins are applied after
   // component constructor creation
+  // 构造器配置合并
   resolveConstructorOptions(Ctor)
 
   // transform component v-model data into props & events
@@ -183,6 +185,7 @@ export function createComponent (
   }
 
   // install component management hooks onto the placeholder node
+  // 挂载组件钩子
   installComponentHooks(data)
 
   // return a placeholder vnode

@@ -13,6 +13,7 @@ export function initAssetRegisters (Vue: GlobalAPI) {
       definition: Function | Object
     ): Function | Object | void {
       if (!definition) {
+        // 直接返回注册组件的构造函数
         return this.options[type + 's'][id]
       } else {
         /* istanbul ignore if */
@@ -20,7 +21,9 @@ export function initAssetRegisters (Vue: GlobalAPI) {
           validateComponentName(id)
         }
         if (type === 'component' && isPlainObject(definition)) {
+          // 组件名称设置
           definition.name = definition.name || id
+          // Vue.extend() 创建子组件，返回子类构造器
           definition = this.options._base.extend(definition)
         }
         if (type === 'directive' && typeof definition === 'function') {

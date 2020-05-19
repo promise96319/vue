@@ -84,6 +84,17 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
   }
 }
 
+// 当调用栈空闲后每次事件循环只会从 (macro)task 中读取一个任务并执行，
+// 而在同一次事件循环内会将 microtask 队列中所有的任务全部执行完毕，且要先于 (macro)task
+
+// 另外 (macro)task 中两个不同的任务之间可能穿插着UI的重渲染，
+// 那么我们只需要在 microtask 中把所有在UI重渲染之前需要更新的数据全部更新，
+// 这样只需要一次重渲染就能得到最新的DOM了。恰好 Vue 是一个数据驱动的框架，
+// 如果能在UI重渲染之前更新所有数据状态，这对性能的提升是一个很大的帮助，
+// 所有要优先选用 microtask 去更新数据状态而不是 (macro)task
+
+// 所以理论上最优的选择是使用 Promise，
+// 当浏览器不支持 Promise 时再降级为 setTimeout
 export function nextTick (cb?: Function, ctx?: Object) {
   let _resolve
   callbacks.push(() => {
@@ -97,8 +108,10 @@ export function nextTick (cb?: Function, ctx?: Object) {
       _resolve(ctx)
     }
   })
+  
   if (!pending) {
     pending = true
+    // 降级处理的函数：宏任务 -> 微任务
     timerFunc()
   }
   // $flow-disable-line
