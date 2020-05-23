@@ -113,6 +113,7 @@ export function createComponent (
 
   // plain options object: turn it into a constructor
   // 针对局部组件注册场景
+  // 当为异步组件时，Ctor 不为对象，而是函数
   if (isObject(Ctor)) {
     Ctor = baseCtor.extend(Ctor)
   }

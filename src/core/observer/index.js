@@ -69,6 +69,7 @@ export class Observer {
    * Walk through all properties and convert them into
    * getter/setters. This method should only be called when
    * value type is Object.
+   * 对象响应式
    */
   walk (obj: Object) {
     const keys = Object.keys(obj)
@@ -79,6 +80,7 @@ export class Observer {
 
   /**
    * Observe a list of Array items.
+   * 数组元素响应式
    */
   observeArray (items: Array<any>) {
     for (let i = 0, l = items.length; i < l; i++) {
@@ -192,6 +194,7 @@ export function defineReactive (
         // 第一个框：dep 为闭包引用
         // 收集的依赖的触发时机是当属性值被修改时触发，即在 set 函数中触发：dep.notify()
         dep.depend()
+        // childOb是标志属性值是否为基础类型的标志(因为如果不是基础类型，就会有__ob__)
         if (childOb) {
           // 第二个框：childOb.dep
           // childOb.dep = xxx.__ob__.dep
@@ -241,15 +244,18 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
   ) {
     warn(`Cannot set reactive property on undefined, null, or primitive value: ${(target: any)}`)
   }
+  // 数组场景，调用重写的splice方法，对新添加属性收集依赖。
   if (Array.isArray(target) && isValidArrayIndex(key)) {
     target.length = Math.max(target.length, key)
     target.splice(key, 1, val)
     return val
   }
+  // 数组场景，调用重写的splice方法，对新添加属性收集依赖。
   if (key in target && !(key in Object.prototype)) {
     target[key] = val
     return val
   }
+  // 拿到目标源的Observer 实例
   const ob = (target: any).__ob__
   if (target._isVue || (ob && ob.vmCount)) {
     process.env.NODE_ENV !== 'production' && warn(
@@ -258,10 +264,12 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
     )
     return val
   }
+  // 目标源对象本身不是一个响应式对象，则不需要处理
   if (!ob) {
     target[key] = val
     return val
   }
+  // 手动调用defineReactive，为新属性设置getter,setter
   defineReactive(ob.value, key, val)
   ob.dep.notify()
   return val

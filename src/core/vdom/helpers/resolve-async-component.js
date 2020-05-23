@@ -88,8 +88,10 @@ export function resolveAsyncComponent (
       }
     }
 
+    // once 确保函数只执行一次
     const resolve = once((res: Object | Class<Component>) => {
       // cache resolved
+      // 转成组件构造器，并将其缓存到resolved属性中
       factory.resolved = ensureCtor(res, baseCtor)
       // invoke callbacks only if this is not a synchronous resolve
       // (async resolves are shimmed as synchronous during SSR)
